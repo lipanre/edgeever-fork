@@ -17,6 +17,7 @@ import { NEW_IMAGE_WIDTH_PERCENT, parseImageWidth } from "./image-display";
 import { IMAGE_GALLERY_NODE_TYPE, groupConsecutiveImagesIntoGalleries, normalizeImageGalleries } from "./image-gallery";
 import { EMPTY_EXTERNAL_LINK_NODE_TYPE } from "./empty-external-link";
 import { FRONT_MATTER_LANGUAGE, createFrontMatterNode, getFrontMatterSource, splitMarkdownFrontMatter } from "./front-matter";
+import { ALERT_NODE_TYPE, stripAlertMarker } from "./alert";
 
 export { PluginEmbed, PLUGIN_EMBED_NODE_TYPE, pluginEmbedToMarkdown, normalizePluginEmbedAttributes } from "./plugin-embed";
 export type { PluginEmbedAttributes } from "./plugin-embed";
@@ -186,6 +187,40 @@ const upgradeMathCodeFences = (doc: TiptapDoc): TiptapDoc => {
   return content.some((node, index) => node !== doc.content[index]) ? { ...doc, content } : doc;
 };
 
+/** Upgrade quote text saved before GitHub Alerts gained a semantic node. */
+const upgradeAlertBlockquotes = (doc: TiptapDoc): TiptapDoc => {
+  const visit = (node: TiptapNode): TiptapNode => {
+    const content = node.content?.map((child) => child.type === "text" ? child : visit(child));
+    const next = content ? { ...node, content } : node;
+    if (next.type !== "blockquote" || !next.content?.length) return next;
+
+    const firstBlock = next.content[0];
+    if (firstBlock.type !== "paragraph" || !firstBlock.content?.length) return next;
+    const firstInline = firstBlock.content;
+    const firstText = firstInline[0];
+    if (!firstText || firstText.type !== "text" || !("text" in firstText)) return next;
+    const marker = stripAlertMarker(firstText.text);
+    if (!marker) return next;
+
+    const remainingText = marker.text.replace(/^\r?\n/, "");
+    const paragraphContent = [
+      ...(remainingText ? [{ ...firstText, text: remainingText }] : []),
+      ...firstInline.slice(1),
+    ];
+    return {
+      type: ALERT_NODE_TYPE,
+      attrs: { kind: marker.kind },
+      content: [
+        paragraphContent.length > 0 ? { ...firstBlock, content: paragraphContent } : { type: "paragraph" },
+        ...next.content.slice(1),
+      ],
+    };
+  };
+
+  const content = doc.content.map(visit);
+  return content.some((node, index) => node !== doc.content[index]) ? { ...doc, content } : doc;
+};
+
 /**
  * Recovers Markdown features that an older editor schema could not persist in
  * contentJson. The stored Markdown remains the compatibility source in that
@@ -197,9 +232,9 @@ export const resolveMemoContentDoc = (
   contentMarkdown: string | null | undefined
 ): TiptapDoc => {
   const currentDoc = contentJson && Array.isArray(contentJson.content)
-    ? upgradeMathCodeFences(normalizeImageGalleries(
+    ? upgradeAlertBlockquotes(upgradeMathCodeFences(normalizeImageGalleries(
         upgradeStandaloneFileLinks(upgradeStandalonePdfLinks(upgradeLegacyAttachmentLinks(contentJson))),
-      ))
+      )))
     : emptyDoc();
   if (getFrontMatterSource(currentDoc) !== null) return currentDoc;
   if (
@@ -207,6 +242,7 @@ export const resolveMemoContentDoc = (
     docContainsNodeType(currentDoc, "table") ||
     docContainsNodeType(currentDoc, "taskList") ||
     docContainsNodeType(currentDoc, "edgeeverThemeBlock") ||
+    docContainsNodeType(currentDoc, ALERT_NODE_TYPE) ||
     docContainsNodeType(currentDoc, IMAGE_GALLERY_NODE_TYPE) ||
     docContainsNodeType(currentDoc, MERGE_DIVIDER_NODE_TYPE) ||
     docContainsNodeType(currentDoc, PLUGIN_EMBED_NODE_TYPE) ||
@@ -232,6 +268,7 @@ export const resolveMemoContentDoc = (
   // still retains their semantics.
   return docContainsNodeType(markdownDoc, "table")
     || docContainsNodeType(markdownDoc, "taskList")
+    || docContainsNodeType(markdownDoc, ALERT_NODE_TYPE)
     || docContainsNodeType(markdownDoc, MERGE_DIVIDER_NODE_TYPE)
     || docContainsNodeType(markdownDoc, BLOCK_MATH_NODE_TYPE)
     || docContainsNodeType(markdownDoc, INLINE_MATH_NODE_TYPE)

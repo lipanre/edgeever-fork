@@ -1,5 +1,6 @@
 import { Mark, Node } from "@tiptap/core";
 import type { TiptapDoc, TiptapMark, TiptapNode, TiptapTextNode } from "./content";
+import { ALERT_NODE_TYPE } from "./alert";
 import { FILE_ATTACHMENT_NODE_TYPE } from "./file-attachment";
 import { PDF_ATTACHMENT_NODE_TYPE } from "./pdf-attachment";
 import { PLUGIN_EMBED_NODE_TYPE } from "./plugin-embed";
@@ -21,6 +22,7 @@ export const NATIVE_EDITOR_NODE_TYPES = new Set<string>([
   "paragraph",
   "heading",
   "blockquote",
+  ALERT_NODE_TYPE,
   "bulletList",
   "orderedList",
   "listItem",

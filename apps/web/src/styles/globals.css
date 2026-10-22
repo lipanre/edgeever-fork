@@ -1736,6 +1736,69 @@ html[data-edgeever-extension-theme] .edgeever-memo-divider {
   background: #f3f5f7;
 }
 
+.ProseMirror blockquote[data-edgeever-alert],
+.edgeever-editor[data-editor-theme] .ProseMirror blockquote[data-edgeever-alert] {
+  --edgeever-alert-accent: #3b82f6;
+  --edgeever-alert-bg: #eff6ff;
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--edgeever-alert-accent) 24%, transparent);
+  border-left: 4px solid var(--edgeever-alert-accent);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  background: var(--edgeever-alert-bg);
+}
+
+.ProseMirror blockquote[data-edgeever-alert]::before,
+.edgeever-editor[data-editor-theme] .ProseMirror blockquote[data-edgeever-alert]::before {
+  display: block;
+  width: auto;
+  height: auto;
+  margin: 0 0 0.35rem;
+  border: 0;
+  background: none;
+  color: var(--edgeever-alert-accent);
+  content: attr(data-edgeever-alert-label);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  -webkit-mask: none;
+  mask: none;
+}
+
+.ProseMirror blockquote[data-edgeever-alert]::after,
+.edgeever-editor[data-editor-theme] .ProseMirror blockquote[data-edgeever-alert]::after {
+  content: none;
+}
+
+.ProseMirror blockquote[data-edgeever-alert] > :first-child {
+  margin-top: 0;
+}
+
+.ProseMirror blockquote[data-edgeever-alert] > :last-child {
+  margin-bottom: 0;
+}
+
+.ProseMirror blockquote[data-edgeever-alert="tip"] {
+  --edgeever-alert-accent: #16a06e;
+  --edgeever-alert-bg: #ecfdf5;
+}
+
+.ProseMirror blockquote[data-edgeever-alert="important"] {
+  --edgeever-alert-accent: #8b5cf6;
+  --edgeever-alert-bg: #f5f3ff;
+}
+
+.ProseMirror blockquote[data-edgeever-alert="warning"] {
+  --edgeever-alert-accent: #d97706;
+  --edgeever-alert-bg: #fffbeb;
+}
+
+.ProseMirror blockquote[data-edgeever-alert="caution"] {
+  --edgeever-alert-accent: #e11d48;
+  --edgeever-alert-bg: #fff1f2;
+}
+
 .ProseMirror code {
   border: 0;
   border-radius: 4px;
@@ -2757,6 +2820,31 @@ html[data-edgeever-extension-theme] .edgeever-memo-divider {
 :root.dark .ProseMirror blockquote {
   color: hsl(var(--foreground));
   background: rgb(255 255 255 / 0.05);
+}
+
+:root.dark .ProseMirror blockquote[data-edgeever-alert="note"] {
+  --edgeever-alert-accent: #60a5fa;
+  --edgeever-alert-bg: rgb(59 130 246 / 0.12);
+}
+
+:root.dark .ProseMirror blockquote[data-edgeever-alert="tip"] {
+  --edgeever-alert-accent: #34d399;
+  --edgeever-alert-bg: rgb(22 160 110 / 0.12);
+}
+
+:root.dark .ProseMirror blockquote[data-edgeever-alert="important"] {
+  --edgeever-alert-accent: #a78bfa;
+  --edgeever-alert-bg: rgb(139 92 246 / 0.12);
+}
+
+:root.dark .ProseMirror blockquote[data-edgeever-alert="warning"] {
+  --edgeever-alert-accent: #fbbf24;
+  --edgeever-alert-bg: rgb(217 119 6 / 0.12);
+}
+
+:root.dark .ProseMirror blockquote[data-edgeever-alert="caution"] {
+  --edgeever-alert-accent: #fb7185;
+  --edgeever-alert-bg: rgb(225 29 72 / 0.12);
 }
 
 :root.dark .ProseMirror code,
