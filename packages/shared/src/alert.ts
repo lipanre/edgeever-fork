@@ -7,7 +7,7 @@ import {
   type MarkdownRendererHelpers,
   type MarkdownToken,
 } from "@tiptap/core";
-import { TextSelection } from "@tiptap/pm/state";
+import { Plugin, TextSelection } from "@tiptap/pm/state";
 
 export const ALERT_NODE_TYPE = "edgeeverAlert";
 export const ALERT_KINDS = ["note", "tip", "important", "warning", "caution"] as const;
@@ -103,7 +103,23 @@ export const EdgeEverAlert = Node.create({
         find: ALERT_INPUT_PATTERN,
         handler: ({ state, range, match }) => {
           const $from = state.doc.resolve(range.from);
-          if (range.from !== $from.start()) return null;
+          const compactQuote = range.from === $from.start() + 1
+            && $from.depth > 0
+            && $from.parent.type.name === "paragraph"
+            && $from.parent.textBetween(0, 1) === ">";
+          if (range.from !== $from.start() && !compactQuote) return null;
+
+          if (compactQuote) {
+            const from = $from.before($from.depth);
+            const to = from + $from.parent.nodeSize;
+            state.tr.replaceWith(
+              from,
+              to,
+              this.type.create({ kind: normalizeAlertKind(match[1]) }, state.schema.nodes.paragraph.create()),
+            );
+            state.tr.setSelection(TextSelection.near(state.tr.doc.resolve(from + 2), 1));
+            return;
+          }
 
           let depth = $from.depth;
           while (depth > 0 && $from.node(depth).type.name !== "blockquote") depth -= 1;
@@ -147,6 +163,36 @@ export const EdgeEverAlert = Node.create({
         return true;
       }),
     };
+  },
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        appendTransaction: (transactions, _oldState, newState) => {
+          if (!transactions.some((transaction) => transaction.docChanged)) return null;
+
+          const matches: Array<{ pos: number; kind: AlertKind; markerLength: number }> = [];
+          newState.doc.descendants((node, pos) => {
+            if (matches.length > 0 || node.type.name !== "blockquote") return;
+            const firstChild = node.firstChild;
+            if (!firstChild || firstChild.type.name !== "paragraph") return;
+            const firstText = firstChild.textContent;
+            const alertMatch = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i.exec(firstText);
+            if (!alertMatch) return;
+            matches.push({
+              pos,
+              kind: normalizeAlertKind(alertMatch[1]),
+              markerLength: alertMatch[0].length,
+            });
+          });
+          const [match] = matches;
+          if (!match) return null;
+
+          const tr = newState.tr.setNodeMarkup(match.pos, this.type, { kind: match.kind });
+          tr.delete(match.pos + 2, match.pos + 2 + match.markerLength);
+          return tr;
+        },
+      }),
+    ];
   },
   markdownTokenizer: {
     name: ALERT_NODE_TYPE,

@@ -357,6 +357,17 @@ describe("alert typing", () => {
     editor.destroy();
   });
 
+  test("turns compact typed alert syntax without a quote space", () => {
+    const editor = createEditor();
+    typeText(editor, ">[!note]");
+
+    expect(editor.getJSON().content[0]).toMatchObject({
+      type: "edgeeverAlert",
+      attrs: { kind: "note" },
+    });
+    editor.destroy();
+  });
+
   test("deletes an empty alert with Backspace at its start", () => {
     const editor = createEditor({
       type: "doc",
@@ -385,6 +396,24 @@ describe("alert typing", () => {
       type: "paragraph",
       content: [{ type: "text", text: "保留内容" }],
     });
+    editor.destroy();
+  });
+
+  test("converts a typed or pasted alert quote without waiting for a reload", () => {
+    const editor = createEditor();
+    const { schema } = editor;
+    const blockquote = schema.nodes.blockquote.create(
+      null,
+      schema.nodes.paragraph.create(null, schema.text("[!note] 即时渲染")),
+    );
+
+    editor.view.dispatch(editor.state.tr.replaceWith(0, editor.state.doc.content.size, blockquote));
+
+    expect(editor.getJSON().content[0]).toMatchObject({
+      type: "edgeeverAlert",
+      attrs: { kind: "note" },
+    });
+    expect(editor.getJSON().content[0].content[0].content[0].text).toBe(" 即时渲染");
     editor.destroy();
   });
 });
