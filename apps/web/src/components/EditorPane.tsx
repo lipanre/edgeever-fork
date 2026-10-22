@@ -67,6 +67,7 @@ import {
   resolveMarkdownModeContent,
 } from "./editor/editor-mode-content";
 import { useEditorMarkdownMode } from "./editor/useEditorMarkdownMode";
+import { getMarkdownPasteContent } from "./editor/markdown-paste";
 import {
   ImageUploadPlaceholderExtension,
   addImageUploadPlaceholder,
@@ -1383,15 +1384,26 @@ const RichEditorPane = ({
         return true;
       },
       transformPastedHTML: (html) => wrapDetailsContentHtml(html),
-      handlePaste: (_view, event) => {
+      handlePaste: (view, event) => {
         const files = getResourceFilesFromDataTransfer(event.clipboardData);
 
-        if (files.length === 0) {
-          return false;
+        if (files.length > 0) {
+          event.preventDefault();
+          insertResourceFiles(files);
+          return true;
         }
 
+        const markdownContent = getMarkdownPasteContent(
+          event.clipboardData?.getData("text/plain") ?? "",
+        );
+        if (!markdownContent) return false;
+
+        const currentEditor = editorRef.current;
+        if (!isEditorReady(currentEditor) || currentEditor.view !== view) return false;
+
+        if (!currentEditor.commands.insertContent(markdownContent)) return false;
+
         event.preventDefault();
-        insertResourceFiles(files);
         return true;
       },
       handleDrop: (view, event) => {
