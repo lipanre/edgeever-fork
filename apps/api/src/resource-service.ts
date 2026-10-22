@@ -9,9 +9,9 @@ import type { AppContext, AuditActor, Bindings } from "./api-context";
 import { AppError } from "./app-error";
 import { createId, isoNow } from "./entity-utils";
 import { sha256Bytes } from "./hash-utils";
-import { resolveImageObjectStorage, resolveObjectStorage } from "./object-storage";
+import { resolveObjectStorage } from "./object-storage";
 import { getWorkspaceId } from "./request-auth";
-import type { BlobStoreAdapter, DatabaseAdapter } from "./storage-contract";
+import type { DatabaseAdapter } from "./storage-contract";
 
 export const MAX_IMAGE_UPLOAD_BYTES = 100 * 1024 * 1024;
 export const MAX_ATTACHMENT_UPLOAD_BYTES = 1024 * 1024 * 1024;
@@ -118,16 +118,6 @@ export const deleteReleasedResourceObjects = async (
 export const validateAttachmentUpload = (size: number) => {
   if (size <= 0 || size > MAX_ATTACHMENT_UPLOAD_BYTES) {
     throw new AppError("upload_too_large", "Attachment must be between 1 byte and 1 GiB.", 413);
-  }
-};
-
-export const assertObjectStorageSizeLimit = (store: BlobStoreAdapter, size: number) => {
-  if (store.maxObjectBytes && size > store.maxObjectBytes) {
-    throw new AppError(
-      "upload_too_large",
-      `GitHub image hosting supports images up to ${Math.floor(store.maxObjectBytes / 1024 / 1024)} MiB.`,
-      413,
-    );
   }
 };
 
@@ -279,10 +269,7 @@ const storeResource = async (
     ? { ...input.metadata, originalFilename: filename }
     : input.metadata;
   const objectKey = `workspaces/${workspaceId}/memos/${input.memoId}/${resourceId}${input.objectKeyExtension ?? ""}`;
-  const destination = input.kind === "image"
-    ? await resolveImageObjectStorage(context.env)
-    : await resolveObjectStorage(context.env);
-  assertObjectStorageSizeLimit(destination.store, input.bytes.byteLength);
+  const destination = await resolveObjectStorage(context.env);
   const checksum = await sha256Bytes(input.bytes);
 
   await destination.store.put(objectKey, input.bytes, {
@@ -411,7 +398,6 @@ export const replaceResourceContent = async (
 
   const source = await resolveObjectStorage(context.env, current.storage_config_id);
   const nextObjectKey = `${current.object_key}.version-${createId("blob")}`;
-  assertObjectStorageSizeLimit(source.store, input.bytes.byteLength);
   await source.store.put(nextObjectKey, input.bytes, {
     httpMetadata: { contentType: mimeType, cacheControl: "private, max-age=3600" },
     customMetadata: { memoId: current.memo_id, resourceId: current.id, filename },

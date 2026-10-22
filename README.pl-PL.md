@@ -196,7 +196,6 @@ Administrator może tworzyć i wyłączać konta oraz resetować ich hasła w **
 ### Rozszerzenia pamięci masowej i zewnętrzny hosting obrazów
 
 - **Magazyn obiektów OSS**: Właściciel instancji może skonfigurować magazyn zgodny z S3 w **Profil → Zaawansowane → Magazyn obiektów OSS**. Zmiana magazynu nie przenosi istniejących załączników ani ich nie modyfikuje.
-- **Hosting obrazów GitHub**: Właściciel instancji może włączyć publiczne repozytorium w **Ustawienia → Zaawansowane → Hosting obrazów GitHub** przy użyciu fine-grained tokena z uprawnieniem Contents: Read and write. Nowe obrazy są zapisywane w GitHub, token jest szyfrowany na serwerze, a eksport kopii zapasowej EdgeEver nadal pobiera te obrazy przez instancję.
 - **Integracja z PicGo na komputerze**: Aplikacja desktopowa opcjonalnie współpracuje z lokalną usługą PicGo, przesyłając wstawiane obrazy bezpośrednio do GitHuba, SM.MS, Upyun, Qiniu lub własnego hostingu, co ogranicza zużycie miejsca i transferu we własnym środowisku.
 
 ### Wtyczki i motywy

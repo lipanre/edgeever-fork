@@ -76,7 +76,6 @@ import { registerTemplateRoutes } from "./template-routes";
 import { registerAuthRoutes } from "./auth-routes";
 import { registerApiTokenRoutes } from "./api-token-routes";
 import { registerObjectStorageRoutes } from "./object-storage-routes";
-import { registerGitHubImageHostRoutes } from "./github-image-host-routes";
 import { registerAiRoutes } from "./ai-routes";
 import { registerPluginCapabilityRoutes } from "./plugin-capability-routes";
 import { registerCompanionRoutes } from "./companion-routes";
@@ -321,9 +320,6 @@ app.use("/api/v1/*", async (c, next) => {
 });
 
 registerObjectStorageRoutes(app, {
-  isDemoMode: (...args) => isDemoMode(...args),
-});
-registerGitHubImageHostRoutes(app, {
   isDemoMode: (...args) => isDemoMode(...args),
 });
 registerAiRoutes(app, {

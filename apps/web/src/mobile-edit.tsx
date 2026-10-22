@@ -10,7 +10,6 @@ import { installPhoneImageFillStyle } from "@edgeever/shared/image-display";
 import { bootstrapI18n } from "@/i18n";
 import { defaultLocale, getBrowserLocale } from "@/i18n/locales";
 import "./styles/mobile-markdown-editor.css";
-import "./styles/markdown-alert.css";
 import "./styles/editor-body-fonts.css";
 
 installPhoneImageFillStyle();

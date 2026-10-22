@@ -39,7 +39,6 @@ import { ShortcutSettingsItem } from "./settings/ShortcutSettingsItem";
 import { PasswordCard } from "./settings/PasswordCard";
 import { UserManagementCard } from "./settings/UserManagementCard";
 import { ObjectStorageCard } from "./settings/ObjectStorageCard";
-import { GitHubImageHostCard } from "./settings/GitHubImageHostCard";
 import { AiModelCard } from "./settings/AiModelCard";
 import { SpeechTranscriptionCard } from "./settings/SpeechTranscriptionCard";
 import { DesktopAcpAgentCard } from "./settings/DesktopAcpAgentCard";
@@ -270,7 +269,6 @@ export const SettingsPane = ({
         return (
           <SettingsGroup>
             {isOwner ? <ObjectStorageCard demoMode={demoMode} /> : null}
-            {isOwner ? <GitHubImageHostCard demoMode={demoMode} /> : null}
             {canClearLocalData ? <DesktopLocalDataCard /> : null}
           </SettingsGroup>
         );

@@ -8,9 +8,8 @@ import { auditStatement } from "./audit";
 import type { AppContext, AuditActor } from "./api-context";
 import { AppError } from "./app-error";
 import { createId, isoNow } from "./entity-utils";
-import { resolveImageObjectStorage, resolveObjectStorage } from "./object-storage";
+import { resolveObjectStorage } from "./object-storage";
 import {
-  assertObjectStorageSizeLimit,
   SUPPORTED_IMAGE_MIME_TYPES,
   getResourceRow,
   inferImageExtension,
@@ -121,10 +120,7 @@ export const initiateResourceUpload = async (
   const filename = normalizeFilename(input.filename) || resourceId;
   const extension = kind === "image" ? inferImageExtension(filename, input.mimeType) : "";
   const objectKey = `workspaces/${workspaceId}/memos/${input.memoId}/${resourceId}${extension}`;
-  const destination = kind === "image"
-    ? await resolveImageObjectStorage(context.env)
-    : await resolveObjectStorage(context.env);
-  assertObjectStorageSizeLimit(destination.store, input.byteSize);
+  const destination = await resolveObjectStorage(context.env);
   const multipart = await destination.store.createMultipartUpload(
     objectKey,
     uploadHttpMetadata(input.mimeType),
@@ -213,10 +209,7 @@ export const initiateResourceRestoreUpload = async (
   const filename = normalizeFilename(metadata.filename || "") || `${metadata.kind}-${metadata.id}`;
   const mimeType = metadata.mimeType?.trim() || "application/octet-stream";
   const objectKey = `workspaces/${workspaceId}/restores/${metadata.memoId}/${metadata.id}/${Date.now()}-${filename}`;
-  const destination = metadata.kind === "image"
-    ? await resolveImageObjectStorage(context.env)
-    : await resolveObjectStorage(context.env);
-  assertObjectStorageSizeLimit(destination.store, metadata.byteSize);
+  const destination = await resolveObjectStorage(context.env);
   const multipart = await destination.store.createMultipartUpload(
     objectKey,
     uploadHttpMetadata(mimeType),

@@ -53,24 +53,6 @@ const pastePlainText = (editor, text) => {
   );
 };
 
-const pressAlertBackspace = (editor) => {
-  const extension = editor.extensionManager.extensions.find((candidate) => candidate.name === "edgeeverAlert");
-  const shortcuts = extension.config.addKeyboardShortcuts.call({
-    editor: {
-      commands: {
-        command: (callback) => {
-          const tr = editor.state.tr;
-          const handled = callback({ state: editor.state, tr });
-          if (handled) editor.view.dispatch(tr);
-          return handled;
-        },
-      },
-    },
-    type: editor.schema.nodes.edgeeverAlert,
-  });
-  return shortcuts.Backspace();
-};
-
 const paragraphText = (node) => node.content?.filter((child) => child.type === "text").map((child) => child.text).join("") ?? "";
 
 describe("checklist typing", () => {
@@ -340,80 +322,6 @@ describe("formula typing and pasting", () => {
       type: "codeBlock",
       content: [{ type: "text", text: "const value = $a$;" }],
     });
-    editor.destroy();
-  });
-});
-
-describe("alert typing", () => {
-  test("turns typed lowercase GitHub alert syntax into an alert block", () => {
-    const editor = createEditor();
-    typeText(editor, "> [!note]");
-
-    expect(editor.getJSON().content[0]).toMatchObject({
-      type: "edgeeverAlert",
-      attrs: { kind: "note" },
-    });
-    expect(docToMarkdown(editor.getJSON()).trim()).toBe("> [!NOTE]");
-    editor.destroy();
-  });
-
-  test("turns compact typed alert syntax without a quote space", () => {
-    const editor = createEditor();
-    typeText(editor, ">[!note]");
-
-    expect(editor.getJSON().content[0]).toMatchObject({
-      type: "edgeeverAlert",
-      attrs: { kind: "note" },
-    });
-    editor.destroy();
-  });
-
-  test("deletes an empty alert with Backspace at its start", () => {
-    const editor = createEditor({
-      type: "doc",
-      content: [{ type: "edgeeverAlert", attrs: { kind: "note" }, content: [{ type: "paragraph" }] }],
-    });
-    editor.commands.setTextSelection(2);
-
-    expect(pressAlertBackspace(editor)).toBe(true);
-    expect(editor.getJSON().content).toEqual([{ type: "paragraph" }]);
-    editor.destroy();
-  });
-
-  test("unwraps a non-empty alert without deleting its content", () => {
-    const editor = createEditor({
-      type: "doc",
-      content: [{
-        type: "edgeeverAlert",
-        attrs: { kind: "tip" },
-        content: [{ type: "paragraph", content: [{ type: "text", text: "保留内容" }] }],
-      }, { type: "paragraph" }],
-    });
-    editor.commands.setTextSelection(2);
-
-    expect(pressAlertBackspace(editor)).toBe(true);
-    expect(editor.getJSON().content[0]).toEqual({
-      type: "paragraph",
-      content: [{ type: "text", text: "保留内容" }],
-    });
-    editor.destroy();
-  });
-
-  test("converts a typed or pasted alert quote without waiting for a reload", () => {
-    const editor = createEditor();
-    const { schema } = editor;
-    const blockquote = schema.nodes.blockquote.create(
-      null,
-      schema.nodes.paragraph.create(null, schema.text("[!note] 即时渲染")),
-    );
-
-    editor.view.dispatch(editor.state.tr.replaceWith(0, editor.state.doc.content.size, blockquote));
-
-    expect(editor.getJSON().content[0]).toMatchObject({
-      type: "edgeeverAlert",
-      attrs: { kind: "note" },
-    });
-    expect(editor.getJSON().content[0].content[0].content[0].text).toBe(" 即时渲染");
     editor.destroy();
   });
 });

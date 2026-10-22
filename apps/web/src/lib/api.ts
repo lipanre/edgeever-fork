@@ -13,7 +13,6 @@ export type {
   AiProviderUpdatePayload,
   InstanceHealth,
   InstanceRelease,
-  GitHubImageHostSettingsResponse,
   JsonBackupPage,
   MarkdownExportPage,
   MemoShareResponse,

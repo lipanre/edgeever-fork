@@ -2,7 +2,6 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
-  ALERT_NODE_TYPE,
   createEdgeEverDocumentExtensions,
   docToMarkdown,
   IMAGE_GALLERY_NODE_TYPE,
@@ -27,7 +26,6 @@ describe("shared document extensions", () => {
     }).map((extension) => extension.name);
 
     expect(names).toContain("starterKit");
-    expect(names).toContain(ALERT_NODE_TYPE);
     expect(names).toContain("taskList");
     expect(names).toContain("taskItem");
     expect(names).toContain("tableKit");

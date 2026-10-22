@@ -4,7 +4,6 @@ import { TaskList } from "@tiptap/extension-list";
 import { EdgeEverTableKit as TableKit } from "./markdown-table";
 import { Markdown } from "@tiptap/markdown";
 import StarterKit from "@tiptap/starter-kit";
-import { EdgeEverAlert } from "./alert";
 import { createEdgeEverDetailsExtensions } from "./details";
 import { FileAttachment } from "./file-attachment";
 import { ImageGallery } from "./image-gallery";
@@ -46,7 +45,6 @@ export const createEdgeEverDocumentExtensions = (
     : options.starterKit === undefined ? StarterKit : StarterKit.configure(options.starterKit),
   ...(options.markdown ? [EdgeEverLink] : []),
   EmptyExternalLink,
-  EdgeEverAlert,
   TaskList,
   createEdgeEverTaskItem(),
   options.table === undefined ? TableKit : TableKit.configure(options.table),

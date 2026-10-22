@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ALERT_NODE_TYPE, docToMarkdown, markdownToDoc, resolveMemoContentDoc } from "@edgeever/shared";
+import { docToMarkdown, markdownToDoc } from "@edgeever/shared";
 
 describe("shared Markdown conversion", () => {
   test("parses adjacent headings, lists, quotes, and inline formatting into TipTap nodes", () => {
@@ -16,9 +16,8 @@ describe("shared Markdown conversion", () => {
       "bulletList",
       "heading",
       "bulletList",
-      ALERT_NODE_TYPE,
+      "blockquote",
     ]);
-    expect(doc.content[4]?.attrs?.kind).toBe("warning");
 
     const firstList = doc.content[1];
     const firstText = firstList.content?.[0]?.content?.[0]?.content?.[0];
@@ -60,56 +59,6 @@ describe("shared Markdown conversion", () => {
       ["heading", 6],
     ]);
     expect(docToMarkdown(doc)).toBe(markdown);
-  });
-
-  test("round-trips GitHub Alerts with block content", () => {
-    const markdown = `> [!NOTE]
-> Useful information.
-
-> [!WARNING]
-> Critical warning.
->
-> - first
-> - second`;
-
-    const doc = markdownToDoc(markdown);
-    expect(doc.content.map((node) => [node.type, node.attrs?.kind])).toEqual([
-      [ALERT_NODE_TYPE, "note"],
-      [ALERT_NODE_TYPE, "warning"],
-    ]);
-    expect(docToMarkdown(doc)).toBe(markdown);
-  });
-
-  test("supports every GitHub Alert kind", () => {
-    for (const kind of ["note", "tip", "important", "warning", "caution"] as const) {
-      const markdown = `> [!${kind.toUpperCase()}]\n> ${kind} content`;
-      const doc = markdownToDoc(markdown);
-      expect(doc.content[0]).toMatchObject({
-        type: ALERT_NODE_TYPE,
-        attrs: { kind },
-      });
-      expect(docToMarkdown(doc)).toBe(markdown);
-    }
-  });
-
-  test("upgrades alert-like quotes saved by the old editor", () => {
-    const legacyDoc = {
-      type: "doc" as const,
-      content: [{
-        type: "blockquote",
-        content: [{
-          type: "paragraph",
-          content: [{ type: "text", text: "[!TIP]\nKeep the Markdown source." }],
-        }],
-      }],
-    };
-
-    const resolved = resolveMemoContentDoc(legacyDoc, "> [!TIP]\n> Keep the Markdown source.");
-    expect(resolved.content[0]).toMatchObject({
-      type: ALERT_NODE_TYPE,
-      attrs: { kind: "tip" },
-    });
-    expect(docToMarkdown(resolved)).toBe("> [!TIP]\n> Keep the Markdown source.");
   });
 
   test("serializes TipTap marks and block nodes back to Markdown", () => {

@@ -4,7 +4,6 @@
 @import "./editor-themes/index.css";
 @import "./publish-layout.css";
 @import "./note-prose.css";
-@import "./markdown-alert.css";
 @import "./code-highlight-dark.css";
 
 @source "../../node_modules/streamdown/dist";

@@ -1,15 +1,7 @@
-import {
-  isGitHubImageHostConfigId,
-  type GitHubImageHostSettings,
-  type ObjectStorageSettings,
-} from "@edgeever/shared";
+import type { ObjectStorageSettings } from "@edgeever/shared";
 import { AppError } from "./app-error";
 import { decryptSecret, encryptSecret } from "./secret-encryption";
 import type { BlobStoreAdapter, DatabaseAdapter } from "./storage-contract";
-import {
-  createWorkerGitHubImageStore,
-  type WorkerGitHubImageHostConfig,
-} from "./worker-github-image-store";
 import { createWorkerS3BlobStore, type WorkerS3Config } from "./worker-s3-blob-store";
 
 export const BUILTIN_STORAGE_CONFIG_ID = "builtin";
@@ -65,16 +57,6 @@ export type ObjectStorageConfigRow = {
   is_active: number;
 };
 
-export type GitHubImageHostConfigRow = {
-  id: string;
-  repository: string;
-  branch: string;
-  object_prefix: string;
-  token_encrypted: string;
-  is_enabled: number;
-  is_current: number;
-};
-
 type ObjectStorageEnvironment = {
   storage: { db: DatabaseAdapter; resources: BlobStoreAdapter };
   EDGE_EVER_AUTH_PASSWORD?: string;
@@ -87,20 +69,11 @@ type ObjectStorageEnvironment = {
 const selectConfigSql = `SELECT id, provider, display_name, endpoint, region, bucket, access_key_id,
   secret_access_key_encrypted, force_path_style, object_prefix, is_active FROM object_storage_configs`;
 
-const selectGitHubImageHostSql = `SELECT id, repository, branch, object_prefix, token_encrypted, is_enabled, is_current
-  FROM github_image_host_configs`;
-
 export const getActiveObjectStorageConfig = (db: DatabaseAdapter) =>
   db.prepare(`${selectConfigSql} WHERE is_active = 1 LIMIT 1`).first<ObjectStorageConfigRow>();
 
 export const getObjectStorageConfig = (db: DatabaseAdapter, id: string) =>
   db.prepare(`${selectConfigSql} WHERE id = ?`).bind(id).first<ObjectStorageConfigRow>();
-
-export const getGitHubImageHostConfig = (db: DatabaseAdapter, id: string) =>
-  db.prepare(`${selectGitHubImageHostSql} WHERE id = ?`).bind(id).first<GitHubImageHostConfigRow>();
-
-export const getCurrentGitHubImageHostConfig = (db: DatabaseAdapter) =>
-  db.prepare(`${selectGitHubImageHostSql} WHERE is_current = 1 LIMIT 1`).first<GitHubImageHostConfigRow>();
 
 export const mapObjectStorageSettings = (
   row: ObjectStorageConfigRow,
@@ -117,18 +90,6 @@ export const mapObjectStorageSettings = (
   objectPrefix: row.object_prefix,
   encryptionConfigured,
 });
-
-export const mapGitHubImageHostSettings = (
-  row: GitHubImageHostConfigRow | null,
-  encryptionConfigured: boolean,
-): GitHubImageHostSettings | null => row ? {
-  enabled: Boolean(row.is_enabled),
-  repository: row.repository,
-  branch: row.branch,
-  objectPrefix: row.object_prefix,
-  hasToken: Boolean(row.token_encrypted),
-  encryptionConfigured,
-} : null;
 
 const decryptObjectStorageCredential = async (
   encryptedValue: string,
@@ -170,26 +131,6 @@ export const resolveStoredObjectStorageSecret = async (
   return resolved.value;
 };
 
-export const resolveStoredGitHubImageHostToken = async (
-  db: DatabaseAdapter,
-  row: GitHubImageHostConfigRow,
-  environment: ObjectStorageCredentialEnvironment,
-) => {
-  if (!row.token_encrypted) {
-    throw new AppError("github_image_host_unavailable", "The GitHub image host token is missing.", 503);
-  }
-  const resolved = await decryptObjectStorageCredential(row.token_encrypted, environment);
-  const primaryKey = resolvePrimaryObjectStorageEncryptionKey(environment);
-  if (resolved.needsMigration && primaryKey) {
-    const migratedToken = await encryptSecret(resolved.value, primaryKey);
-    await db.prepare(
-      `UPDATE github_image_host_configs SET token_encrypted = ? WHERE id = ?`,
-    ).bind(migratedToken, row.id).run();
-    row.token_encrypted = migratedToken;
-  }
-  return resolved.value;
-};
-
 const toWorkerS3Config = async (
   db: DatabaseAdapter,
   row: ObjectStorageConfigRow,
@@ -210,39 +151,7 @@ const toWorkerS3Config = async (
   };
 };
 
-const toWorkerGitHubImageHostConfig = async (
-  db: DatabaseAdapter,
-  row: GitHubImageHostConfigRow,
-  environment: ObjectStorageCredentialEnvironment,
-): Promise<WorkerGitHubImageHostConfig> => ({
-  repository: row.repository,
-  branch: row.branch,
-  objectPrefix: row.object_prefix,
-  token: await resolveStoredGitHubImageHostToken(db, row, environment),
-});
-
-export const resolveImageObjectStorage = async (env: ObjectStorageEnvironment) => {
-  const github = await getCurrentGitHubImageHostConfig(env.storage.db);
-  if (!github?.is_enabled) return resolveObjectStorage(env);
-  return {
-    configId: github.id,
-    bucketName: `github:${github.repository}`,
-    store: createWorkerGitHubImageStore(await toWorkerGitHubImageHostConfig(env.storage.db, github, env)),
-  };
-};
-
 export const resolveObjectStorage = async (env: ObjectStorageEnvironment, configId?: string | null) => {
-  if (isGitHubImageHostConfigId(configId)) {
-    const github = await getGitHubImageHostConfig(env.storage.db, configId!);
-    if (!github) {
-      throw new AppError("object_storage_unavailable", "The resource's GitHub image host configuration no longer exists.", 503);
-    }
-    return {
-      configId: github.id,
-      bucketName: `github:${github.repository}`,
-      store: createWorkerGitHubImageStore(await toWorkerGitHubImageHostConfig(env.storage.db, github, env)),
-    };
-  }
   const row = configId
     ? await getObjectStorageConfig(env.storage.db, configId)
     : await getActiveObjectStorageConfig(env.storage.db);
