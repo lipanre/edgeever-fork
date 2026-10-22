@@ -1060,6 +1060,7 @@ export const enUS = {
       violet: "Iris purple",
       pink: "Rose pink",
       slate: "Mauve gray",
+      "vue-dark": "Vue Dark",
     },
     editorBodyCssTitle: "Custom CSS",
     editorBodyCssDescription: "One stylesheet. Light rules set spacing and color, and the following :root.dark rules only override color. Size and line height stay on the controls above.",

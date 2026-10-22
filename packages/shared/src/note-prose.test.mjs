@@ -54,9 +54,10 @@ describe("note prose", () => {
       return (values[1] + 0.05) / (values[0] + 0.05);
     };
     for (const [id, colors] of Object.entries(NOTE_PROSE_PALETTES)) {
-      for (const background of ["#FFFFFF", "#F8FAFB"]) {
+      const lightBackgrounds = id === "vue-dark" ? [colors.background] : ["#FFFFFF", "#F8FAFB"];
+      for (const background of lightBackgrounds) {
         // Bright emphasis is intentional; links and code retain normal-text AA.
-        const minimumAccentContrast = id === "teal" ? 2.5 : id === "clay" ? 3 : 4.5;
+        const minimumAccentContrast = id === "vue-dark" ? 3 : id === "teal" ? 2.5 : id === "clay" ? 3 : 4.5;
         expect(contrast(colors.accent, background)).toBeGreaterThanOrEqual(minimumAccentContrast);
         for (const foreground of [colors.link, colors.codeText]) {
           expect(contrast(foreground, background)).toBeGreaterThanOrEqual(4.5);

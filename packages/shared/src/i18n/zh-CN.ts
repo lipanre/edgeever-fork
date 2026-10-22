@@ -1060,6 +1060,7 @@ export const zhCN = {
       violet: "鸢紫",
       pink: "玫粉",
       slate: "灰紫",
+      "vue-dark": "青黛暗色",
     },
     editorBodyCssTitle: "自定义 CSS",
     editorBodyCssDescription: "同一份样式。浅色写间距和颜色，紧随的 :root.dark 只覆盖颜色。字号和行高不写在这里。",

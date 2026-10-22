@@ -14,6 +14,7 @@ export const NOTE_PROSE_PALETTE_IDS = [
   "violet",
   "pink",
   "slate",
+  "vue-dark",
 ] as const;
 export type NoteProsePaletteId = (typeof NOTE_PROSE_PALETTE_IDS)[number];
 
@@ -185,6 +186,17 @@ export const NOTE_PROSE_PALETTES: Record<NoteProsePaletteId, NoteProsePaletteCol
     codeText: "#6B5C6D",
     background: "#FFFFFF",
   }),
+  "vue-dark": palette({
+    accent: "#42B983",
+    text: "#EEEEEE",
+    muted: "#AAAAAA",
+    surface: "#252525",
+    divider: "#333333",
+    link: "#42B983",
+    codeBackground: "#1A1A1A",
+    codeText: "#F3B37F",
+    background: "#1F1F1F",
+  }),
 };
 
 // Dark reading surfaces need lighter accents than the white-background palette.
@@ -196,6 +208,7 @@ export const NOTE_PROSE_DARK_ACCENTS: Record<NoteProsePaletteId, string> = {
   violet: "#B39AE8",
   pink: "#E794B0",
   slate: "#BCACBF",
+  "vue-dark": "#5AD6A0",
 };
 
 const LEGACY_EDITOR_THEME_PALETTES: Record<string, NoteProsePaletteChoice> = {
