@@ -141,7 +141,7 @@ export const createWorkerGitHubImageStore = (
       ...githubHeaders(config.token, Boolean(init.body)),
       ...(init.headers as Record<string, string> | undefined),
     },
-    redirect: "error",
+    redirect: "manual",
     signal: requestSignal(),
   });
 
@@ -285,7 +285,7 @@ export const testWorkerGitHubImageHostConnection = async (
   const repositoryPath = `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
   const request = (path: string) => fetchImpl(`${GITHUB_API_BASE}${path}`, {
     headers: githubHeaders(config.token),
-    redirect: "error",
+    redirect: "manual",
     signal: requestSignal(),
   });
 

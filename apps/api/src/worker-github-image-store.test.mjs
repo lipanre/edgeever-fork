@@ -17,7 +17,7 @@ describe("worker GitHub image store", () => {
     const requests = [];
     const fetchImpl = async (input, init) => {
       const url = new URL(String(input));
-      requests.push({ path: url.pathname, authorization: init.headers.Authorization });
+      requests.push({ path: url.pathname, authorization: init.headers.Authorization, redirect: init.redirect });
       if (url.pathname === "/repos/owner/repo") return Response.json({ private: false, permissions: { push: true } });
       if (url.pathname === "/repos/owner/repo/branches/main") return Response.json({ name: "main" });
       return Response.json({ message: "Not Found" }, { status: 404 });
@@ -25,9 +25,16 @@ describe("worker GitHub image store", () => {
 
     expect(await testWorkerGitHubImageHostConnection(config(fetchImpl))).toBe(true);
     expect(requests).toEqual([
-      { path: "/repos/owner/repo", authorization: "Bearer github_pat_test" },
-      { path: "/repos/owner/repo/branches/main", authorization: "Bearer github_pat_test" },
+      { path: "/repos/owner/repo", authorization: "Bearer github_pat_test", redirect: "manual" },
+      { path: "/repos/owner/repo/branches/main", authorization: "Bearer github_pat_test", redirect: "manual" },
     ]);
+  });
+
+  test("rejects redirects instead of treating them as successful", async () => {
+    await expect(testWorkerGitHubImageHostConnection(config(async () => new Response(null, {
+      status: 302,
+      headers: { location: "https://example.com/redirected" },
+    })))).rejects.toThrow("failed (302)");
   });
 
   test("uploads, reads with a range, and deletes an image through the Contents API", async () => {
