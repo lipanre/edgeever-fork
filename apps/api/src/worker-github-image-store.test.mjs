@@ -17,7 +17,12 @@ describe("worker GitHub image store", () => {
     const requests = [];
     const fetchImpl = async (input, init) => {
       const url = new URL(String(input));
-      requests.push({ path: url.pathname, authorization: init.headers.Authorization, redirect: init.redirect });
+      requests.push({
+        path: url.pathname,
+        authorization: init.headers.Authorization,
+        userAgent: init.headers["User-Agent"],
+        redirect: init.redirect,
+      });
       if (url.pathname === "/repos/owner/repo") return Response.json({ private: false, permissions: { push: true } });
       if (url.pathname === "/repos/owner/repo/branches/main") return Response.json({ name: "main" });
       return Response.json({ message: "Not Found" }, { status: 404 });
@@ -25,8 +30,8 @@ describe("worker GitHub image store", () => {
 
     expect(await testWorkerGitHubImageHostConnection(config(fetchImpl))).toBe(true);
     expect(requests).toEqual([
-      { path: "/repos/owner/repo", authorization: "Bearer github_pat_test", redirect: "manual" },
-      { path: "/repos/owner/repo/branches/main", authorization: "Bearer github_pat_test", redirect: "manual" },
+      { path: "/repos/owner/repo", authorization: "Bearer github_pat_test", userAgent: "EdgeEver-GitHub-Image-Host", redirect: "manual" },
+      { path: "/repos/owner/repo/branches/main", authorization: "Bearer github_pat_test", userAgent: "EdgeEver-GitHub-Image-Host", redirect: "manual" },
     ]);
   });
 
@@ -35,6 +40,24 @@ describe("worker GitHub image store", () => {
       status: 302,
       headers: { location: "https://example.com/redirected" },
     })))).rejects.toThrow("failed (302)");
+  });
+
+  test("reports actionable GitHub permission failures without leaking credentials", async () => {
+    const failure = testWorkerGitHubImageHostConnection(config(async () => Response.json({
+      message: "Resource not accessible by personal access token",
+    }, {
+      status: 403,
+      headers: {
+        "x-github-request-id": "REQ-123",
+        "x-ratelimit-remaining": "0",
+      },
+    })));
+
+    await expect(failure).rejects.toThrow("Resource not accessible by personal access token");
+    await expect(failure).rejects.toThrow("Metadata: Read and Contents: Read and write");
+    await expect(failure).rejects.toThrow("rate limit is exhausted");
+    await expect(failure).rejects.toThrow("GitHub Request ID: REQ-123");
+    await expect(failure).rejects.not.toThrow("github_pat_test");
   });
 
   test("uploads, reads with a range, and deletes an image through the Contents API", async () => {

@@ -8,6 +8,7 @@ import type {
 const GITHUB_API_BASE = "https://api.github.com";
 const GITHUB_API_VERSION = "2022-11-28";
 const GITHUB_TIMEOUT_MS = 60_000;
+const GITHUB_USER_AGENT = "EdgeEver-GitHub-Image-Host";
 
 export type WorkerGitHubImageHostConfig = {
   repository: string;
@@ -44,14 +45,42 @@ const fullObjectPath = (prefix: string, objectKey: string) => [prefix, objectKey
 const githubHeaders = (token: string, json = false) => ({
   Accept: "application/vnd.github+json",
   Authorization: `Bearer ${token}`,
+  "User-Agent": GITHUB_USER_AGENT,
   "X-GitHub-Api-Version": GITHUB_API_VERSION,
   ...(json ? { "Content-Type": "application/json" } : {}),
 });
 
 const responseError = async (operation: string, response: Response) => {
-  const data = await response.json().catch(() => null) as { message?: unknown } | null;
-  const detail = typeof data?.message === "string" ? `: ${data.message.slice(0, 300)}` : "";
-  return new Error(`${operation} failed (${response.status})${detail}`);
+  const text = await response.text().catch(() => "");
+  let message = text.replace(/\s+/g, " ").trim().slice(0, 300);
+  try {
+    const data = JSON.parse(text) as { message?: unknown; documentation_url?: unknown };
+    if (typeof data.message === "string") message = data.message.slice(0, 300);
+  } catch {
+    // Some edge failures return plain text or an HTML error page.
+  }
+  const requestId = response.headers.get("x-github-request-id")?.trim();
+  const remaining = response.headers.get("x-ratelimit-remaining")?.trim();
+  const sso = response.headers.get("x-github-sso")?.trim();
+  const hints = [];
+  if (response.status === 401) {
+    hints.push("Check that the access token is valid and has not expired.");
+  } else if (response.status === 403) {
+    hints.push(
+      "Check that the fine-grained token can access this repository, has Metadata: Read and Contents: Read and write permissions, and is authorized for organization SSO if required.",
+    );
+    if (remaining === "0") hints.push("The GitHub API rate limit is exhausted.");
+    if (sso) hints.push("Organization SSO authorization is required.");
+  } else if (response.status === 404) {
+    hints.push("Check the repository name and token repository access; GitHub returns 404 when access is denied.");
+  }
+  const details = [
+    `${operation} failed (${response.status})`,
+    message ? `: ${message}` : "",
+    ...hints.map((hint) => `. ${hint}`),
+    requestId ? `. GitHub Request ID: ${requestId}` : "",
+  ].join("");
+  return new Error(details);
 };
 
 const requestSignal = () => typeof AbortSignal.timeout === "function"
