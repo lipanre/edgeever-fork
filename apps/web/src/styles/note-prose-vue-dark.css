@@ -17,11 +17,12 @@
   --brand-green-text: #42b983;
   --brand-green-soft: rgb(66 185 131 / 0.1);
   --memo-content-divider-color: #333333;
+  background: var(--note-palette-bg);
 }
 
 .edgeever-editor[data-note-palette="vue-dark"] .ProseMirror,
 html[data-editor-body-font] .edgeever-editor[data-note-palette="vue-dark"] .ProseMirror {
-  background: var(--note-palette-bg);
+  background: transparent;
   color: var(--note-palette-text);
   font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
 }

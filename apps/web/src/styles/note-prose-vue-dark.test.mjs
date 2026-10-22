@@ -19,6 +19,8 @@ describe("Vue Dark note palette", () => {
     expect(css).toContain("blinkfox/typora-vue-theme");
     expect(css).toContain("Apache License, Version 2.0");
     expect(css).toContain('font-family: "Source Sans Pro"');
+    expect(css).toContain("background: var(--note-palette-bg);");
+    expect(css).toContain(".ProseMirror,\nhtml[data-editor-body-font] .edgeever-editor[data-note-palette=\"vue-dark\"] .ProseMirror {\n  background: transparent;");
     expect(css).toContain("border-left: 4px solid var(--note-palette-accent)");
     expect(css).toContain("background: rgb(66 185 131 / 0.1)");
   });
