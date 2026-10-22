@@ -160,7 +160,7 @@ import { NEW_IMAGE_WIDTH_PERCENT } from "@edgeever/shared/image-display";
 import { EdgeEverLink } from "@edgeever/shared/editor-link";
 import { createEdgeEverMathematics } from "@edgeever/shared/mathematics";
 import { codeBlockLowlight, EdgeEverCodeBlock } from "@/lib/code-block";
-import { shouldUploadWithGitHub, shouldUploadWithPicGo, uploadImageWithGitHub, uploadImageWithPicGo } from "@/lib/picgo";
+import { shouldUploadWithPicGo, uploadImageWithPicGo } from "@/lib/picgo";
 import { compressImageForUpload } from "@/lib/image-compression";
 import { LOCAL_DATABASE_INTERRUPTED_EVENT, localDb, selectNewestLocalDraft, type MemoUpdateSyncPayload } from "@/lib/local-db";
 import { persistEmergencyDraft, readEmergencyDraft, removeEmergencyDraft } from "@/lib/emergency-draft";
@@ -997,14 +997,6 @@ const RichEditorPane = ({
   const uploadEditorResource = useCallback(async (targetMemoId: string, uploadFile: File, isImage: boolean) => {
     const mimeType = resolveResourceUploadMimeType(uploadFile.name, uploadFile.type);
     if (mimeType !== uploadFile.type) uploadFile = new File([uploadFile], uploadFile.name, { type: mimeType, lastModified: uploadFile.lastModified });
-    if (isImage && shouldUploadWithGitHub()) {
-      const instanceKey = editorInstanceMemoIdentityRef.current.instanceKey;
-      const external = await uploadImageWithGitHub(uploadFile);
-      if (memoRef.current?.id !== targetMemoId || editorInstanceMemoIdentityRef.current.instanceKey !== instanceKey) {
-        throw new Error("The active note changed during image upload");
-      }
-      if (external) return external;
-    }
     if (isImage && shouldUploadWithPicGo()) {
       const instanceKey = editorInstanceMemoIdentityRef.current.instanceKey;
       const external = await uploadImageWithPicGo(uploadFile, {

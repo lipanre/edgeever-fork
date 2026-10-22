@@ -194,7 +194,7 @@ curl -fsSL https://edgeever.org/install.sh | bash
 ### 儲存擴充與第三方圖床
 
 - **OSS 物件儲存**：實例 Owner 可在**設定 → 進階設定 → OSS 物件儲存**中設定相容 S3 API 的物件儲存。切換儲存不會遷移或影響既有附件。
-- **Web 端 GitHub 圖床**：在**我的 → 編輯 → 圖床**中選擇 GitHub，使用具備 Contents: Read and write 權限的 fine-grained Token 連接公開儲存庫。圖片由瀏覽器直傳，Token 僅儲存在目前瀏覽器，圖片不納入 EdgeEver 備份。
+- **GitHub 圖床**：實例 Owner 可在**設定 → 進階設定 → GitHub 圖床**中啟用公開儲存庫，並使用具備 Contents: Read and write 權限的 fine-grained Token。新圖片寫入 GitHub，Token 由服務端加密儲存；EdgeEver 備份匯出時仍會透過實例下載這些圖片。
 - **桌面端 PicGo 圖床**：桌面端支援可選接入本機 PicGo 用戶端服務，在筆記中插入圖片時可直接上傳至 GitHub、SM.MS、又拍雲、七牛雲或自建圖床，進一步減少自託管實例的儲存開銷與頻寬占用。
 
 ### 外掛與個人化主題

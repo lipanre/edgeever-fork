@@ -196,7 +196,7 @@ The instance administrator can create, disable, or reset member accounts in **Pr
 ### Storage Extension & Third-Party Image Hosting
 
 - **OSS Object Storage**: The instance owner can configure S3-compatible object storage under **Settings → Advanced → OSS object storage**. Changing storage does not migrate or affect existing attachments.
-- **GitHub Image Hosting on Web**: Choose GitHub under **Me → Editing → Image hosting** and connect a public repository with a fine-grained token that has Contents: Read and write access. Images upload directly from the browser; the token stays in that browser and the images are excluded from EdgeEver backups.
+- **GitHub Image Hosting**: The instance owner can enable a public GitHub repository under **Settings → Advanced → GitHub image hosting** with a fine-grained token that has Contents: Read and write access. New images are stored in GitHub with the token encrypted on the server, while backup exports download them through the instance.
 - **Desktop PicGo Integration**: The desktop app optionally integrates with a local PicGo client service, uploading inserted images directly to GitHub, SM.MS, Upyun, Qiniu, or custom image hosts to minimize self-hosted storage and bandwidth consumption.
 
 ### Plugins and Themes

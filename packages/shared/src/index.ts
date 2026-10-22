@@ -15,6 +15,7 @@ export * from "./native-attachment-content";
 export * from "./backup";
 export * from "./client-display-size";
 export * from "./github-feedback";
+export * from "./github-image-host";
 export * from "./image-display";
 export * from "./image-gallery";
 export * from "./image-referrer";
