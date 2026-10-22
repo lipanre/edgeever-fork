@@ -1,4 +1,5 @@
 import {
+  InputRule,
   mergeAttributes,
   Node,
   type JSONContent,
@@ -22,6 +23,7 @@ const ALERT_LABELS: Record<AlertKind, string> = {
 const ALERT_START_PATTERN = /^ {0,3}>[ \t]?\[!(?:NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*$/im;
 const BLOCKQUOTE_LINE_PATTERN = /^ {0,3}>/;
 const BLOCKQUOTE_PREFIX_PATTERN = /^ {0,3}>[ \t]?/;
+const ALERT_INPUT_PATTERN = /\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i;
 
 export const normalizeAlertKind = (value: unknown): AlertKind => {
   const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
@@ -94,6 +96,26 @@ export const EdgeEverAlert = Node.create({
 
   parseMarkdown: parseAlertMarkdown,
   renderMarkdown: renderAlertMarkdown,
+  addInputRules() {
+    return [
+      new InputRule({
+        find: ALERT_INPUT_PATTERN,
+        handler: ({ state, range, match }) => {
+          const $from = state.doc.resolve(range.from);
+          if (range.from !== $from.start()) return null;
+
+          let depth = $from.depth;
+          while (depth > 0 && $from.node(depth).type.name !== "blockquote") depth -= 1;
+          if (depth === 0) return null;
+
+          state.tr.setNodeMarkup($from.before(depth), this.type, {
+            kind: normalizeAlertKind(match[1]),
+          });
+          state.tr.delete(range.from, range.to);
+        },
+      }),
+    ];
+  },
   markdownTokenizer: {
     name: ALERT_NODE_TYPE,
     level: "block",

@@ -325,3 +325,17 @@ describe("formula typing and pasting", () => {
     editor.destroy();
   });
 });
+
+describe("alert typing", () => {
+  test("turns typed lowercase GitHub alert syntax into an alert block", () => {
+    const editor = createEditor();
+    typeText(editor, "> [!note]");
+
+    expect(editor.getJSON().content[0]).toMatchObject({
+      type: "edgeeverAlert",
+      attrs: { kind: "note" },
+    });
+    expect(docToMarkdown(editor.getJSON()).trim()).toBe("> [!NOTE]");
+    editor.destroy();
+  });
+});
