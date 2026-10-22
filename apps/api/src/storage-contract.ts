@@ -68,6 +68,8 @@ export type BlobMultipartUploadAdapter = {
  * self-hosted adapter can map it to filesystem sidecars or S3 metadata.
  */
 export type BlobStoreAdapter = {
+  /** Optional provider limit enforced before an upload begins. */
+  maxObjectBytes?: number;
   get: (key: string, options?: BlobGetOptions) => Promise<BlobObjectAdapter | null>;
   put: (key: string, value: unknown, options?: unknown) => Promise<unknown>;
   createMultipartUpload: (key: string, options?: unknown) => Promise<BlobMultipartUploadAdapter>;

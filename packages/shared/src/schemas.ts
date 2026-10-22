@@ -260,6 +260,46 @@ export const ObjectStorageConnectionTestSchema = z.object({
   objectPrefix: z.string().trim().max(500).default(""),
 });
 
+const GitHubImageHostRepositorySchema = z.string().trim().min(3).max(201).regex(
+  /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/,
+  "Repository must use the owner/repo format.",
+);
+
+const GitHubImageHostBranchSchema = z.string().trim().min(1).max(255).refine(
+  (value) => !/[~^:?*[\]\\\s]/.test(value)
+    && !value.includes("..")
+    && !value.startsWith("/")
+    && !value.endsWith("/")
+    && !value.startsWith(".")
+    && !value.endsWith("."),
+  "Branch name is invalid.",
+);
+
+const hasUnsafePathCharacter = (value: string) => Array.from(value).some((character) => {
+  const code = character.charCodeAt(0);
+  return code < 32 || code === 127 || character === "\\";
+});
+
+const GitHubImageHostObjectPrefixSchema = z.string().trim().max(500).refine((value) => {
+  const segments = value.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+  return segments.every((segment) => segment !== "." && segment !== ".." && !hasUnsafePathCharacter(segment));
+}, "Object prefix is invalid.");
+
+export const GitHubImageHostSettingsUpdateSchema = z.object({
+  enabled: z.boolean(),
+  repository: GitHubImageHostRepositorySchema,
+  branch: GitHubImageHostBranchSchema,
+  objectPrefix: GitHubImageHostObjectPrefixSchema.default(""),
+  token: z.string().trim().min(1).max(4096).optional(),
+});
+
+export const GitHubImageHostConnectionTestSchema = z.object({
+  repository: GitHubImageHostRepositorySchema,
+  branch: GitHubImageHostBranchSchema,
+  objectPrefix: GitHubImageHostObjectPrefixSchema.default(""),
+  token: z.string().trim().min(1).max(4096).optional(),
+});
+
 export const AiProviderSchema = z.enum(["openai-compatible", "anthropic", "google"]);
 
 export const AiTranscriptionStandardSchema = z.enum(["openai-compatible"]);

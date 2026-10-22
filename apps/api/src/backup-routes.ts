@@ -17,8 +17,9 @@ import type { AppEnv } from "./api-context";
 import { AppError } from "./app-error";
 import { isoNow, parseJsonArray } from "./entity-utils";
 import { apiError, badRequest, conflict, notFound } from "./http-errors";
-import { resolveObjectStorage } from "./object-storage";
+import { resolveImageObjectStorage, resolveObjectStorage } from "./object-storage";
 import {
+  assertObjectStorageSizeLimit,
   MAX_ATTACHMENT_UPLOAD_BYTES,
   MAX_IMAGE_UPLOAD_BYTES,
   mapResource,
@@ -395,7 +396,10 @@ export const registerBackupRoutes = (
       ).bind(metadata.originalMemoId, workspaceId).first<{ id: string }>()
       : null;
 
-    const destination = await resolveObjectStorage(context.env);
+    const destination = metadata.kind === "image"
+      ? await resolveImageObjectStorage(context.env)
+      : await resolveObjectStorage(context.env);
+    assertObjectStorageSizeLimit(destination.store, bytes.byteLength);
     await destination.store.put(objectKey, bytes, {
       httpMetadata: { contentType: metadata.mimeType ?? file.type ?? "application/octet-stream" },
       customMetadata: { memoId: metadata.memoId, resourceId: metadata.id, restored: "true" },

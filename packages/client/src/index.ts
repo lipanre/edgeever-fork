@@ -53,6 +53,7 @@ import type {
   ResourceListItem,
   ResourceStorageSummary,
   ObjectStorageSettings,
+  GitHubImageHostSettingsResponse,
   AccountNoteProse,
   NoteProsePatch,
   PublicMemoShare,
@@ -78,6 +79,8 @@ import type {
   PluginPublicFetchRequest,
   PluginPublicFetchResponse,
 } from "@edgeever/shared";
+
+export type { GitHubImageHostSettingsResponse } from "@edgeever/shared";
 
 export const MAX_SINGLE_REQUEST_UPLOAD_BYTES = 5 * 1024 * 1024;
 
@@ -845,6 +848,9 @@ export const createEdgeEverClient = (options: EdgeEverClientOptions = {}) => {
     getObjectStorageSettings: () =>
       request<ObjectStorageSettingsResponse>("/api/v1/instance/object-storage"),
 
+    getGitHubImageHostSettings: () =>
+      request<GitHubImageHostSettingsResponse>("/api/v1/instance/github-image-host"),
+
     testObjectStorageConnection: (payload: {
       endpoint: string;
       region: string;
@@ -871,6 +877,27 @@ export const createEdgeEverClient = (options: EdgeEverClientOptions = {}) => {
           forcePathStyle: boolean;
           objectPrefix: string;
         }) => request<ObjectStorageSettingsResponse>("/api/v1/instance/object-storage", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+
+    testGitHubImageHostConnection: (payload: {
+      repository: string;
+      branch: string;
+      objectPrefix: string;
+      token?: string;
+    }) => request<{ ok: true }>("/api/v1/instance/github-image-host/test", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+    updateGitHubImageHostSettings: (payload: {
+      enabled: boolean;
+      repository: string;
+      branch: string;
+      objectPrefix: string;
+      token?: string;
+    }) => request<GitHubImageHostSettingsResponse>("/api/v1/instance/github-image-host", {
       method: "PUT",
       body: JSON.stringify(payload),
     }),
