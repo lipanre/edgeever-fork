@@ -7,6 +7,7 @@ import {
   type MarkdownRendererHelpers,
   type MarkdownToken,
 } from "@tiptap/core";
+import { TextSelection } from "@tiptap/pm/state";
 
 export const ALERT_NODE_TYPE = "edgeeverAlert";
 export const ALERT_KINDS = ["note", "tip", "important", "warning", "caution"] as const;
@@ -115,6 +116,37 @@ export const EdgeEverAlert = Node.create({
         },
       }),
     ];
+  },
+  addKeyboardShortcuts() {
+    return {
+      Backspace: () => this.editor.commands.command(({ state, tr }) => {
+        const { selection } = state;
+        if (!selection.empty) return false;
+        const { $from } = selection;
+        let depth = $from.depth;
+        while (depth > 0 && $from.node(depth).type !== this.type) depth -= 1;
+        if (depth === 0 || $from.pos !== $from.start(depth) + 1) return false;
+
+        const alert = $from.node(depth);
+        const from = $from.before(depth);
+        const to = from + alert.nodeSize;
+        if (alert.textContent.trim()) {
+          tr.replaceWith(from, to, alert.content);
+          tr.setSelection(TextSelection.near(tr.doc.resolve(from + 1), 1));
+          return true;
+        }
+
+        const paragraph = state.schema.nodes.paragraph.create();
+        if (state.doc.childCount === 1) {
+          tr.replaceWith(from, to, paragraph);
+          tr.setSelection(TextSelection.near(tr.doc.resolve(1), 1));
+        } else {
+          tr.delete(from, to);
+          tr.setSelection(TextSelection.near(tr.doc.resolve(Math.min(from, tr.doc.content.size)), -1));
+        }
+        return true;
+      }),
+    };
   },
   markdownTokenizer: {
     name: ALERT_NODE_TYPE,
