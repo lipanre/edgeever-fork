@@ -1049,7 +1049,6 @@ export const pl = {
       violet: "Irysowy fiolet",
       pink: "Różany róż",
       slate: "Szarość z fioletem",
-      "vue-dark": "Vue Dark",
     },
     editorBodyCssTitle: "Własny CSS",
     editorBodyCssDescription: "Jeden arkusz stylów. Reguły jasne ustawiają odstępy i kolory, a następujące po nich reguły :root.dark nadpisują tylko kolory. Rozmiar i interlinia pozostają w ustawieniach powyżej.",

@@ -4,7 +4,6 @@
 @import "./editor-themes/index.css";
 @import "./publish-layout.css";
 @import "./note-prose.css";
-@import "./note-prose-vue-dark.css";
 @import "./code-highlight-dark.css";
 
 @source "../../node_modules/streamdown/dist";

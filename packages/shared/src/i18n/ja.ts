@@ -1049,7 +1049,6 @@ export const ja = {
       violet: "アイリスパープル",
       pink: "ローズピンク",
       slate: "モーヴグレー",
-      "vue-dark": "Vue ダーク",
     },
     editorBodyCssTitle: "カスタム CSS",
     editorBodyCssDescription: "スタイルは1つです。ライトで間隔と色を書き、直後の :root.dark は色だけを上書きします。文字サイズと行間はここでは指定しません。",
